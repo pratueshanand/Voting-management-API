@@ -2,10 +2,15 @@ const express = require('express');
 const router = express.Router();
 const User = require('../model/user');
 const { jwtAuthMiddleware, generateToken } = require('../jwt');
+const Candidate = require('../model/candidate');
 
 router.post('/signup', async (req, res) => {
     try{
       const data = req.body;
+      const adminUsers = await User.find({role: 'admin'});
+      if(data.role === 'admin' && adminUsers.length > 0){
+        return res.status(403).json({message: 'admin already exists'});
+      }
       const newUser = new User(data); 
       const response = await newUser.save();
 
@@ -57,34 +62,6 @@ router.get('/profile', jwtAuthMiddleware, async (req, res) => {
   }
 })
 
-// router.get('/', async (req, res) => {
-//     try{
-//       const data = await User.find();
-//       console.log('data fetched');
-//       res.status(200).json(data);
-//     }catch(err){
-//       console.log(err);
-//       res.status(500).json({error: 'Internal Server Error'});
-//     }
-// });
-
-// router.get('/:worktype', async (req, res) => {
-//     try{
-//       const workType = req.params.worktype;
-//       if(workType == "chef" || workType == "manager" || workType == 'waiter'){
-//         const data = await User.find({work: workType});
-//         console.log('data fetched');
-//         res.status(200).json(data);
-//       }
-//       else{
-//         res.status(404).json({error: 'Invalid Work Type'});
-//       }
-//     }catch(err){
-//       console.log(err);
-//       res.status(500).json({error: 'Internal Server Error'});
-//     }
-// });
-
 router.put('/profile/password', jwtAuthMiddleware, async (req, res) => {
     try{
         const userId = req.user.id;
@@ -106,59 +83,5 @@ router.put('/profile/password', jwtAuthMiddleware, async (req, res) => {
         res.status(500).json({error: 'Internal Server Error'});
     }
 })
-
-// router.get('/:id', async (req, res) => {
-//     try{
-//         const UserId = req.params.id;
-//         const response = await User.findById(UserId);
-
-//         if(!response){
-//             return res.status(404).json({error: 'User not found'})
-//         }
-
-//         console.log('User');
-//         res.status(200).json({response});
-//     }catch(err){
-//         console.log(err);
-//         res.status(500).json({error: 'Internal Server Error'});
-//     }
-// })
-
-// router.patch('/:id', async (req, res) => {
-//     try{
-//       const UserId = req.params.id;
-//       const updatedUserData = req.body;
-
-//       const response = await User.findByIdAndUpdate(UserId, updatedUserData, {
-//           new: true,
-//           runValidators: true
-//       });
-
-//       if(!response){
-//           res.status(404).json({error: 'User not found'})
-//       }
-
-//       console.log(response);
-//       res.status(200).json(response);
-//     }catch(err){
-//         console.log(err);
-//         res.status(500).json({error: 'err'});
-//     }
-// })
-
-// router.delete('/:id', async (req, res) => {
-//     try{
-//         const UserId = req.params.id;
-//         const response = await User.findByIdAndDelete(UserId);
-//         if(!response){
-//             return res.status(404).json({error: 'User not found'})
-//         }
-//         console.log('Data Deleted');
-//         res.status(200).json({message: 'User Deleted Successfully'});
-//     }catch(err){
-//         console.log(err);
-//         res.status(500).json({error: 'Internal Server Error'});
-//     }
-// })
 
 module.exports = router;
